@@ -40,4 +40,4 @@ junit-check: ArithmeticJUnitTest.class
 
 # Remove extraneous or reconstructable files.
 clean:
-	rm -f *.class*~
+	$(RM) *.class
