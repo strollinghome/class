@@ -2,7 +2,7 @@ package jump61;
 
 import static jump61.Side.*;
 
-import java.util.Stack;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 
 /** A Jump61 board state that may be modified.
@@ -12,7 +12,7 @@ class MutableBoard extends Board {
 
     /** An N x N board in initial configuration. */
     MutableBoard(int N) {
-        _undoStack = new Stack<SquarePosition>();
+        _undoStack = new ArrayDeque<SquarePosition>();
         _size = N;
         _board = new Square[N * N];
         int i;
@@ -24,14 +24,14 @@ class MutableBoard extends Board {
     /** A board whose initial contents are copied from BOARD0, but whose
      *  undo history is clear. */
     MutableBoard(Board board0) {
-        _undoStack = new Stack<SquarePosition>();
+        _undoStack = new ArrayDeque<SquarePosition>();
         _size = board0.size();
         copy(board0);
     }
 
     @Override
     void clear(int N) {
-        _undoStack = new Stack<SquarePosition>();
+        _undoStack = new ArrayDeque<SquarePosition>();
         _size = N;
         _board = new Square[N * N];
         int i;
@@ -164,7 +164,7 @@ class MutableBoard extends Board {
 
     @Override
     void undo() {
-        if (!_undoStack.empty()) {
+        if (!_undoStack.isEmpty()) {
             int index;
             SquarePosition sq;
             sq = _undoStack.pop();
@@ -185,7 +185,7 @@ class MutableBoard extends Board {
     /** Set the contents of the square with index IND to SQ. Update counts
      *  of numbers of squares of each color.  */
     private void internalSet(int ind, Square sq) {
-        _undoStack = new Stack<SquarePosition>();
+        _undoStack = new ArrayDeque<SquarePosition>();
         _board[ind] = sq;
     }
 
@@ -236,7 +236,7 @@ class MutableBoard extends Board {
     private int _size;
 
     /** Keeps track of the state of the board. */
-    private Stack<SquarePosition> _undoStack;
+    private ArrayDeque<SquarePosition> _undoStack;
 
     @Override
     public Square[] getBoard() {
