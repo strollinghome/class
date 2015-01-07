@@ -1,0 +1,4 @@
+class
+=====
+
+Work from class
