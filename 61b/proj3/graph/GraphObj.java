@@ -1,0 +1,269 @@
+package graph;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Hashtable;
+
+/* See restrictions in Graph.java. */
+
+/** A partial implementation of Graph containing elements common to
+ *  directed and undirected graphs.
+ *
+ *  @author Carlos A. Flores-Arellano.
+ */
+abstract class GraphObj extends Graph {
+
+    /** A new, empty Graph. */
+    GraphObj() {
+        _adjacencyList = new ArrayList<LinkedList<Integer>>();
+        _edges = new ArrayList<Hashtable<Integer, Integer>>();
+        _edgeId = 0;
+    }
+
+    @Override
+    public int vertexSize() {
+        return _vertexCount;
+    }
+
+    @Override
+    public int maxVertex() {
+        int i;
+        for (i = _adjacencyList.size() - 1; i >= 0; i--) {
+            if (_adjacencyList.get(i) != null) {
+                return i + 1;
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public int edgeSize() {
+        return _edgeCount;
+    }
+
+    @Override
+    public abstract boolean isDirected();
+
+    @Override
+    public int outDegree(int v) {
+        if (_adjacencyList.get(v - 1) != null) {
+            return _adjacencyList.get(v - 1).size();
+        }
+        return 0;
+    }
+
+    @Override
+    public abstract int inDegree(int v);
+
+    @Override
+    public boolean contains(int u) {
+        return u <= _adjacencyList.size() && _adjacencyList.get(u - 1) != null;
+    }
+
+    @Override
+    public boolean contains(int u, int v) {
+        if (this.contains(u) && this.contains(v)) {
+            return _adjacencyList.get(u - 1).contains(v);
+        }
+        return false;
+    }
+
+    @Override
+    public int add() {
+        int i;
+        for (i = 0; i < _adjacencyList.size(); i = i + 1) {
+            if (_adjacencyList.get(i) == null) {
+                _adjacencyList.set(i, new LinkedList<Integer>());
+                _vertexCount = _vertexCount + 1;
+                return i + 1;
+            }
+        }
+        _adjacencyList.add(new LinkedList<Integer>());
+        _vertexCount = _vertexCount + 1;
+        _edges.add(new Hashtable<Integer, Integer>());
+        return i + 1;
+    }
+
+    @Override
+    public int add(int u, int v) {
+        if (!this.contains(u) || !this.contains(v)) {
+            throw new IllegalArgumentException(v + " is not in the graph");
+        }
+        if (!this.contains(u, v)) {
+            if (!_adjacencyList.get(u - 1).contains(v)) {
+                _adjacencyList.get(u - 1).add(v);
+                _edgeCount = _edgeCount + 1;
+                _edgeId = _edgeId + 1;
+                if (_edges.get(u - 1) == null) {
+                    _edges.set(u - 1, new Hashtable<Integer, Integer>());
+                } else {
+                    _edges.get(u - 1).put(v, (Integer) _edgeId);
+                }
+            }
+            if (!this.isDirected() && !_adjacencyList.get(v - 1).contains(u)) {
+                _adjacencyList.get(v - 1).add(u);
+                if (_edges.get(v - 1) == null) {
+                    _edges.set(v - 1, new Hashtable<Integer, Integer>());
+                } else {
+                    _edges.get(v - 1).put(u, (Integer) _edgeId);
+                }
+            }
+        }
+        return u;
+    }
+
+    @Override
+    public void remove(int v) {
+        int edges;
+        int i;
+        if (this.contains(v)) {
+            edges = _adjacencyList.get(v - 1).size();
+            _adjacencyList.set(v - 1, null);
+            for (i = 0; i < _adjacencyList.size(); i = i + 1) {
+                if (_adjacencyList.get(i) != null) {
+                    if (_adjacencyList.get(i).contains(v)) {
+                        _adjacencyList.get(i).remove((Integer) v);
+                        if (this.isDirected()) {
+                            edges = edges + 1;
+                        }
+                    }
+                }
+            }
+            _edgeCount = _edgeCount - edges;
+        }
+        _vertexCount = _vertexCount - 1;
+    }
+
+    @Override
+    public void remove(int u, int v) {
+        if (this.contains(u) && this.contains(v)) {
+            if (_adjacencyList.get(u - 1).contains(v)) {
+                _adjacencyList.get(u - 1).remove((Integer) v);
+                _edgeCount = _edgeCount - 1;
+            }
+            if (!this.isDirected()) {
+                _adjacencyList.get(v - 1).remove((Integer) u);
+            }
+        }
+    }
+
+    @Override
+    public Iteration<Integer> vertices() {
+        int i;
+        LinkedList<Integer> v;
+        ArrayList<Integer> vertices = new ArrayList<>();
+        for (i = 0; i < _adjacencyList.size(); i = i + 1) {
+            v = _adjacencyList.get(i);
+            if (v == null) {
+                continue;
+            }
+            vertices.add(i + 1);
+        }
+        return Iteration.iteration(vertices);
+    }
+
+    @Override
+    public int successor(int v, int k) {
+        if (this.contains(v)) {
+            LinkedList<Integer> vertex = _adjacencyList.get(v - 1);
+            if (vertex != null) {
+                if (k < vertex.size()) {
+                    return vertex.get(k);
+                } else {
+                    return 0;
+                }
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public abstract int predecessor(int v, int k);
+
+    @Override
+    public Iteration<Integer> successors(int v) {
+        ArrayList<Integer> successors = new ArrayList<>();
+        if (this.contains(v)) {
+            int i;
+            LinkedList<Integer> vertex = _adjacencyList.get(v - 1);
+            if (vertex != null) {
+                return Iteration.iteration(vertex);
+            }
+        }
+        return Iteration.iteration(successors);
+    }
+
+    @Override
+    public abstract Iteration<Integer> predecessors(int v);
+
+    @Override
+    public Iteration<int[]> edges() {
+        int i;
+        int j;
+        LinkedList<Integer> v;
+        ArrayList<int[]> edges = new ArrayList<>();
+        Hashtable<Integer, Integer> seen = new Hashtable<>();
+        for (i = 0; i < _adjacencyList.size(); i = i + 1) {
+            v = _adjacencyList.get(i);
+            if (v == null) {
+                continue;
+            }
+            for (j = 0; j < v.size(); j = j + 1) {
+                if (!this.isDirected()) {
+                    if (seen.containsKey(i + 1)
+                            && seen.get(i + 1) == v.get(j)) {
+                        continue;
+                    }
+                    if (seen.containsKey(v.get(j))
+                            && seen.get(v.get(j)) == i + 1) {
+                        continue;
+                    }
+                }
+                seen.put(i + 1, v.get(j));
+                edges.add(new int[]{i + 1, v.get(j)});
+            }
+        }
+        return Iteration.iteration(edges);
+    }
+
+    @Override
+    protected boolean mine(int v) {
+        return v <= _adjacencyList.size() && _adjacencyList.get(v - 1) != null;
+    }
+
+    @Override
+    protected void checkMyVertex(int v) {
+        LinkedList<Integer> vertex;
+        if (v - 1 < 0 || v - 1 >= _adjacencyList.size()) {
+            throw new IllegalArgumentException(v + " is not in the graph");
+        } else {
+            vertex = _adjacencyList.get(v - 1);
+            if (vertex == null) {
+                throw new IllegalArgumentException(v + " is not in the graph");
+            }
+        }
+    }
+
+    @Override
+    protected int edgeId(int u, int v) {
+        if (this.contains(u, v)) {
+            return _edges.get(u - 1).get(v);
+        }
+        return 0;
+    }
+
+    /** Representation of adjacency_list. */
+    protected ArrayList<LinkedList<Integer>> _adjacencyList;
+
+    /** Number of vertices in this graph. */
+    private int _vertexCount;
+
+    /** Number of edges in this graph. */
+    private int _edgeCount;
+
+    /** Keeps track of edgeId first time an edge got added. */
+    private ArrayList<Hashtable<Integer, Integer>> _edges;
+
+    /** Keeps track of the edgeId we are on. */
+    private int _edgeId;
+}

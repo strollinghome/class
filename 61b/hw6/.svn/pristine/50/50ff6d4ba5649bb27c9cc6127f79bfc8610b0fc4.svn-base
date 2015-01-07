@@ -1,0 +1,23 @@
+#defines where all source files are
+SRCS = *.java
+
+CLASSES = $(SRCS:.java=.class)
+
+JFLAGS = -g
+
+.PHONY: default style clean
+
+sentinel: $(CLASSES)
+
+clean:
+	$(RM) *~ *.class
+
+check: sentinel
+	java TestBSTStringSet
+
+style:
+	style61b $(SRCS)
+
+$(CLASSES): $(SRCS)
+	javac $(JFLAGS) $(SRCS)
+	touch sentinel

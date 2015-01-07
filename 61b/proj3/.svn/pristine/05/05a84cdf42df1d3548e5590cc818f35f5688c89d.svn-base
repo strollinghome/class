@@ -1,0 +1,322 @@
+package graph;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
+
+import ucb.junit.textui;
+
+/** Unit tests for the Traversal.
+ *  @author Carlos A. Flores-Arellano.
+ */
+public class TraversalTesting {
+
+    @Test
+    public void testDirectedDepthFirst() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 2);
+        G.add(1, 3);
+        G.add(1, 4);
+        G.add(3, 4);
+        G.add(4, 2);
+        DepthFirstTester d = new DepthFirstTester(G);
+        d.traverse(1);
+        List<Integer> expected0 = Arrays.<Integer>asList(1, 4, 2, 3);
+        List<Integer> expected1 = Arrays.<Integer>asList(1, 2, 3, 4);
+        assertTrue(expected0.equals(d.getOrder())
+                    || expected1.equals(d.getOrder()));
+        assertEquals("Wrong biggest number", 4, d.getBiggest());
+        DirectedGraph G1 = new DirectedGraph();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add(1, 2);
+        G1.add(1, 4);
+        G1.add(4, 3);
+        G1.add(2, 3);
+        G1.add(2, 5);
+        DepthFirstTester d1 = new DepthFirstTester(G1);
+        d1.traverse(1);
+        List<Integer> expected2 = Arrays.<Integer>asList(1, 4, 3, 2, 5);
+        List<Integer> expected3 = Arrays.<Integer>asList(1, 2, 3, 5, 4);
+        assertTrue(expected2.equals(d1.getOrder())
+                    || expected3.equals(d1.getOrder()));
+        assertEquals("Wrong biggest number", 5, d1.getBiggest());
+    }
+
+    @Test
+    public void testDirectedBreadthFirst() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 2);
+        G.add(1, 4);
+        G.add(1, 5);
+        G.add(5, 3);
+        G.add(4, 3);
+        G.add(4, 6);
+        BreadthFirstTester d = new BreadthFirstTester(G);
+        d.traverse(1);
+        List<Integer> expected = Arrays.<Integer>asList(1, 2, 4, 5, 3, 6);
+        assertEquals("Wrong order", expected, d.getOrder());
+        assertEquals("Wrong biggest number", 6, d.getBiggest());
+        DirectedGraph G1 = new DirectedGraph();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add(1, 4);
+        G1.add(4, 2);
+        G1.add(4, 3);
+        G1.add(2, 5);
+        G1.add(3, 5);
+        BreadthFirstTester d1 = new BreadthFirstTester(G1);
+        d1.traverse(1);
+        List<Integer> expected1 = Arrays.<Integer>asList(1, 4, 2, 3, 5);
+        assertEquals("Wrong order", expected1, d1.getOrder());
+        assertEquals("Wrong biggest number", 5, d1.getBiggest());
+    }
+
+    @Test
+    public void testUndirectedDepthFirst() {
+        UndirectedGraph G = new UndirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 2);
+        G.add(1, 4);
+        G.add(3, 1);
+        G.add(3, 4);
+        DepthFirstTester d = new DepthFirstTester(G);
+        d.traverse(3);
+        List<Integer> expected = Arrays.<Integer>asList(3, 4, 1, 2);
+        List<Integer> expected1 = Arrays.<Integer>asList(3, 1, 2, 4);
+        assertTrue(expected.equals(d.getOrder())
+                    || expected1.equals(d.getOrder()));
+        UndirectedGraph G1 = new UndirectedGraph();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add();
+        G1.add(1, 5);
+        G1.add(1, 3);
+        G1.add(2, 3);
+        G1.add(2, 5);
+        G1.add(3, 4);
+        DepthFirstTester d1 = new DepthFirstTester(G1);
+        d1.traverse(5);
+        List<Integer> expected2 = Arrays.<Integer>asList(5, 2, 3, 4, 1);
+        List<Integer> expected3 = Arrays.<Integer>asList(5, 1, 3, 2, 4);
+        assertTrue(expected2.equals(d1.getOrder())
+                    || expected3.equals(d1.getOrder()));
+    }
+
+    @Test
+    public void testUndirectedBreadthFirst() {
+        UndirectedGraph G = new UndirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 5);
+        G.add(1, 3);
+        G.add(2, 3);
+        G.add(2, 5);
+        G.add(3, 4);
+        BreadthFirstTester d = new BreadthFirstTester(G);
+        d.traverse(3);
+        List<Integer> expected = Arrays.<Integer>asList(3, 1, 2, 4, 5);
+        assertTrue(expected.equals(d.getOrder()));
+    }
+
+    @Test
+    public void testDirectedPostVisit() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 2);
+        G.add(1, 3);
+        G.add(1, 4);
+        G.add(4, 3);
+        DepthFirstPostVisitTester d = new DepthFirstPostVisitTester(G);
+        d.traverse(1);
+        List<Integer> expected = Arrays.<Integer>asList(3, 4, 2, 1);
+        List<Integer> expected1 = Arrays.<Integer>asList(2, 3, 4, 1);
+        assertTrue(expected.equals(d.getOrder())
+                    || expected1.equals(d.getOrder()));
+        // UndirectedGraph G1 = new UndirectedGraph();
+        // G.add();
+        // G.add();
+        // G.add();
+        // G.add();
+        // G.add();
+        // G.add(1, 5);
+        // G.add(1, 3);
+        // G.add(2, 3);
+        // G.add(2, 5);
+        // G.add(3, 4);
+        // DepthFirstPostVisitTester d1 = new DepthFirstPostVisitTester(G);
+        // d1.traverse(1);
+    }
+
+    public class BreadthFirstTester extends BreadthFirstTraversal {
+
+        public BreadthFirstTester (Graph G) {
+            super(G);
+            _biggest = 0;
+            _visited = 0;
+            _order = new ArrayList<Integer>();
+        }
+
+        protected boolean visit(int v) {
+            _visited = _visited + 1;
+            if (v > _biggest) {
+                _biggest = v;
+            }
+            _order.add(v);
+            return true;
+        }
+
+        public void traverse(int start) {
+            super.traverse(start);
+        }
+
+        public int getBiggest() {
+            return _biggest;
+        }
+
+        public int getVisited() {
+            return _visited;
+        }
+
+        public ArrayList<Integer> getOrder() {
+            return _order;
+        }
+
+        /** Keeps track of the biggest seen number. */
+        private int _biggest;
+
+        /** Keeps track of the number of visited vertices. */
+        private int _visited;
+
+        /** Keeps track of the order in which vertices are visited. */
+        private ArrayList<Integer> _order;
+    }
+
+    public class DepthFirstTester extends DepthFirstTraversal {
+
+        public DepthFirstTester (Graph G) {
+            super(G);
+            _biggest = 0;
+            _visited = 0;
+            _order = new ArrayList<Integer>();
+        }
+
+        public boolean visit(int v) {
+            _visited = _visited + 1;
+            if (v > _biggest) {
+                _biggest = v;
+            }
+            _order.add(v);
+            return true;
+        }
+
+        public void traverse(int start) {
+            super.traverse(start);
+        }
+
+        public int getBiggest() {
+            return _biggest;
+        }
+
+        public int getVisited() {
+            return _visited;
+        }
+
+        public ArrayList<Integer> getOrder() {
+            return _order;
+        }
+
+        /** Keeps track of the biggest seen number. */
+        private int _biggest;
+
+        /** Keeps track of the number of visited vertices. */
+        private int _visited;
+
+        /** Keeps track of the order in which vertices are visited. */
+        private ArrayList<Integer> _order;
+    }
+
+    public class DepthFirstPostVisitTester extends DepthFirstTraversal {
+
+        public DepthFirstPostVisitTester (Graph G) {
+            super(G);
+            _biggest = 0;
+            _visited = 0;
+            _order = new ArrayList<Integer>();
+        }
+
+        public boolean visit(int v) {
+            if (v > _biggest) {
+                _biggest = v;
+            }
+            return true;
+        }
+
+        public void traverse(int start) {
+            super.traverse(start);
+        }
+
+        public int getBiggest() {
+            return _biggest;
+        }
+
+        public int getVisited() {
+            return _visited;
+        }
+
+        public ArrayList<Integer> getOrder() {
+            return _order;
+        }
+
+        protected boolean shouldPostVisit(int v) {
+            return true;
+        }
+
+        protected boolean postVisit(int v) {
+            _order.add(v);
+            return true;
+        }
+
+        /** Keeps track of the biggest seen number. */
+        private int _biggest;
+
+        /** Keeps track of the number of visited vertices. */
+        private int _visited;
+
+        /** Keeps track of the order in which vertices are visited. */
+        private ArrayList<Integer> _order;
+    }
+
+}

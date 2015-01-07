@@ -1,0 +1,25 @@
+Results for InsertRandomSpeedTest:
+N = 50000
+linked-list:    10.02 sec
+BSTStringSet:   0.05 sec
+TreeSet:        0.06 sec 
+
+
+Results for InsertInOrderSpeedTest:
+N = 50000
+linked-list:    11.23 sec
+BSTStringSet:   12.19 sec
+TreeSet:        0.08 sec
+
+
+Explain anything interesting that you might have observed above:
+A couple simple ideas made our implementation much faster. The only explanation
+that I can come up for this phenomenon is that our data structure is very
+limited. If we were to implement a fully functional BSTStringSet and by fully
+functional I mean defining all the abstract methods we would run into a lot of
+trouble. Some methods are much harder to implement with the structure we
+created.
+When we insert InOrder we get effectively annul the cleverness of our
+implementation because we always add a string that is greater than the previous
+one. Pictorially our data structure would be tree with a single long branch.
+This is basically a linked-list but we have extra operations hence its slower.

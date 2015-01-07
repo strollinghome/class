@@ -1,0 +1,68 @@
+package graph;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+import ucb.junit.textui;
+
+/** Unit tests for the UndirectedGraph class.
+ *  @author Carlos A. Flores-Arellano.
+ */
+public class UndirectedGraphTest {
+
+    @Test
+    public void testInDegree() {
+        UndirectedGraph G = new UndirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(4, 5);
+        G.add(4, 1);
+        G.add(4, 2);
+        G.add(4, 3);
+        assertEquals("Wrong inDegree", 4, G.inDegree(4));
+        assertEquals("Wrong inDegree", 0, G.inDegree(100));
+        G.remove(5, 4);
+        assertEquals("Wrong in Degree", 3, G.inDegree(4));
+    }
+
+    @Test
+    public void testPredecessor() {
+        UndirectedGraph G = new UndirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(2, 1);
+        G.add(2, 3);
+        G.add(2, 4);
+        assertEquals("Wrong predecessor", 0, G.predecessor(2, 100));
+        assertEquals("Wrong predecessor", 1, G.predecessor(2, 0));
+        assertEquals("Wrong predecessor", 3, G.predecessor(2, 1));
+        assertEquals("Wrong predecessor", 4, G.predecessor(2, 2));
+    }
+
+    //@Test
+    public void testPredecessors() {
+        UndirectedGraph G = new UndirectedGraph();
+        Iteration<Integer> predecessors;
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 2);
+        G.add(2, 2);
+        G.add(3, 2);
+        G.add(4, 2);
+        predecessors = G.predecessors(2);
+        int i = 1;
+        for (Integer predecessor : predecessors) {
+            assertEquals("Wrong precessor", i, (int) predecessor);
+            i = i + 1;
+        }
+        assertFalse(predecessors.hasNext());
+    }
+
+}

@@ -1,0 +1,116 @@
+Dynamic Method Lookup:
+Suppose we have the code cat.eat(). How do we determine what this does?
+1. Does the static type of cat have the method eat()? If no, compiler error.
+2. If yes, check the dynamic type of cat to see if eat() is overridden. 
+	If overridden, run the dynamic class’s method. If not overridden, run 
+	the static class’s method. Overridden methods must have the same signature
+	(method name, argument types)
+Field Shadowing:
+We always consider the static type for looking up attributes 
+(for example, cat.name will look at the name in cat's static type)
+>When evaluating:
+public void f (Object obj0) {
+	/** Look at obj0’s static type to decide
+	 * whaqt method to use even if it’s overwritten*/
+}
+
+Casting:
+­>Changes the static type for look up. Not for evaluation. (“A promise to the compiler”)
+­>You can cast a subclass to its superclass (“All dogs are animals. I promise that this dog
+is an animal”)
+­>You cannot cast a superclass to one of its subclasses (“You can’t promise that an
+animal is a dog!”) Compile­time error: Incompatible type
+­>When assigning a cast, you are changing its static type (not permanently). Therefore
+your cast on the LHS must match the static type on the RHS
+
+Super:
+super.<variable> will go to the next superclass and get the value from <variable>
+>Does it exist in the super class? Grab the value!
+>No? Compile­time error (cannot find symbol)
+super.<method>() will go to the next superclass and call the method from there
+
+this.<variable>:
+><variable> has to be declared where it is called (otherwise compile­time error: cannot
+find symbol)
+>Looks for <variable> in the class its called in. 
+>Variables are looked up in the static type, cast to dynamic type.
+
+this.<method>:
+>this is a reference to the current object, the one passed into the method.
+Static methods: 
+>If B inherits from A, a static method in A must be a static method in B. 
+>Similarly, an non-static method in A must be an non-static method in B.
+… new B() <—— has static and dynamic type of B.
+>Inside the method if x is called it implies this.x is called, which returns the value
+of the x variable inside that class. this is the static type
+
+Abstract Classes:
+>May have abstract and concrete methods.
+>Abstract methods must be implemented by non-abstract 
+subclasses.
+>May have constructors. (concrete)
+>May have instance variables.
+>May NOT be initialized since some methods might not be defined.Interfaces:
+>All methods are abstract!
+>Cannot have constructors.
+>Instance variables must be initialized.
+>Interface variables are static final by default.
+>Subclasses implement interfaces all methods (not extend).
+>Classes can implement multiple interfaces.
+>Cannot be initialized.
+
+Exception example:
+try { int[] MTGrades = new int[3];
+ for (int student = 1; student < 300; student++) {
+ System.out.println("Student score: " + MTGrades[student]); }
+ } catch (ArrayIndexOutOfBoundsException e) {
+ System.out.println("Forgot my pencil");
+ throw new RuntimeException("Also forgot backup pencil");
+ } catch (RuntimeException f) {
+ System.out.println("I overslept");
+ } finally {
+ System.out.println("Good luck next time");
+}Student score: 0
+Student score: 0
+Forgot my pencil
+Good luck next time
+Exception in thread "main" java.lang.RuntimeException: Also forgot backup pencil
+	at Review.main(Review.java:9)
+
+Bit Operators:
+	 |	Operand Bits (L, R)                    | Operand Bit
+Operation| (0,0) | (0,1) | (1,0) | (1,1)      Operation|  0  |  1  
+_________|_______|_______|_______|_______     _________|_____|_____
+& (and)  |   0   |   0   |   0   |   1	       ~ (not) |  1  |  0  
+_________|_______|_______|_______|_______     _________|_____|_____
+| (or)   |   0   |   1   |   1   |   1
+_________|_______|_______|_______|_______
+^ (xor)  |   0   |   1   |   1   |   0
+_________|_______|_______|_______|_______
+
+>The operation x<<N produces the result of multiplying x by 2^N (or shifting N 
+0’s in on the right). Pushes zeros.
+>The operation x>>>N produces the result of shifting N 0’s in on the left,
+throwing away bits on the right. Pulls zeroes.
+>The operation x>>N shifts N copies of the sign bit (left-most bit), throwing
+away bits on the right. Result of floor division by 2^N. Pulls last digit.
+>In general, if the expression x & ~N masks off exactly the bits that x & N does not.
+>To get the negative of a binary number flip bits and add 1.
+> (~x) + 1 == - x. 
+
+
+
+
+
+
+
+
+8b. 5 My justification was a bit off.
+
+
+9c. 5 I figured out the part where this could break but I did not specify how Bob could break it.
+
+
+7. 5 I had all the parts except that I didn't clarify every single detail.
+
+4. 8 Logic was completely the same I just divided instead of multiplying by the inverse.

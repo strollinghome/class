@@ -1,0 +1,30 @@
+/** An alternative addition procedure based on bit operations.
+ *  without using the operators +, -, /, *, or \%, ++, --, +=, -=, *=, \=,
+ *  %=, or any method calls. Instead, use the bitwise operators &, |, ^, ~,
+ *  <<, >>, >>>, and &=, etc.
+ *  @author Carlos A. Flores-Arellano.*/
+
+public class Adder {
+    /** Returns X+Y.*/
+    public static int add(int x, int y) {
+        int remainder = 0;
+        int result = 0;
+        int k = 0;
+        while (k < INTBITS) {
+            int c0 = (x & (1 << k)) >> k;
+            int c1 = (y & (1 << k)) >> k;
+            int s = c0 ^ c1 ^ remainder;
+            if (remainder == 0) {
+                remainder = c0 & c1;
+            } else {
+                remainder = c0 | c1;
+            }
+            result = result | s << k;
+            k = k + 1;
+        }
+        return result;
+    }
+
+    /** Number of bits in an Int.*/
+    private static final int INTBITS = 32;
+}

@@ -1,0 +1,67 @@
+package graph;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+/** Unit tests for the DirectedGraph class.
+ *  @author Carlos A. Flores-Arellano.
+ */
+public class DirectedGraphTest {
+
+    @Test
+    public void testInDegree() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 4);
+        G.add(2, 4);
+        G.add(3, 4);
+        assertEquals("Wrong inDegree", 3, G.inDegree(4));
+        assertEquals("Wrong inDegree", 0, G.inDegree(100));
+    }
+
+    @Test
+    public void testPredecessor() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 2);
+        G.add(2, 2);
+        G.add(3, 2);
+        G.add(4, 2);
+        assertEquals("Wrong predecessor", 0, G.predecessor(2, 100));
+        assertEquals("Wrong predecessor", 1, G.predecessor(2, 0));
+        assertEquals("Wrong predecessor", 2, G.predecessor(2, 1));
+        assertEquals("Wrong predecessor", 3, G.predecessor(2, 2));
+        assertEquals("Wrong predecessor", 4, G.predecessor(2, 3));
+        G.remove(3, 2);
+        assertEquals("Wrong predecessor", 4, G.predecessor(2, 2));
+    }
+
+    @Test
+    public void testPredecessors() {
+        DirectedGraph G = new DirectedGraph();
+        Iteration<Integer> predecessors;
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 2);
+        G.add(2, 2);
+        G.add(3, 2);
+        G.add(4, 2);
+        G.remove(4);
+        predecessors = G.predecessors(2);
+        int i = 1;
+        for (Integer predecessor : predecessors) {
+            assertEquals("Wrong precessor", i, (int) predecessor);
+            i = i + 1;
+        }
+        assertFalse(predecessors.hasNext());
+    }
+
+}

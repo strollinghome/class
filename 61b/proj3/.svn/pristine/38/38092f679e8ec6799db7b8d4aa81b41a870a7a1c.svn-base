@@ -1,0 +1,163 @@
+package graph;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+/** Unit tests for ShortestPath.
+ *  @author Carlos A. Flores-Arellano.
+ */
+public class PathsTesting {
+
+    // @Test
+    public void testSimplePath0() {
+        DirectedGraph G0 = new DirectedGraph();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add(1, 2);
+        G0.add(1, 3);
+        G0.add(2, 4);
+        G0.add(3, 4);
+        G0.add(4, 5);
+        ShortestPathsTester t0 = new ShortestPathsTester(G0, 1, 5);
+        t0.setWeight(1, 2, 1);
+        t0.setWeight(1, 3, 2);
+        t0.setWeight(2, 4, 7);
+        t0.setWeight(3, 4, 2);
+        t0.setWeight(4, 5, 5);
+        t0.setPaths();
+        assertEquals(0, t0.getWeight(1), 0.1);
+        assertEquals(1, t0.getWeight(2), 0.1);
+        assertEquals(2, t0.getWeight(3), 0.1);
+        assertEquals(4, t0.getWeight(4), 0.1);
+        assertEquals(9, t0.getWeight(5), 0.1);
+        List<Integer> expected = Arrays.<Integer>asList(1, 3, 4, 5);
+        assertEquals("Wrong path", expected, t0.pathTo());
+    }
+
+    // @Test
+    public void testSimplePath1() {
+        DirectedGraph G0 = new DirectedGraph();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add(3, 2);
+        G0.add(3, 1);
+        G0.add(3, 4);
+        G0.add(2, 5);
+        G0.add(2, 4);
+        G0.add(1, 4);
+        G0.add(1, 5);
+        G0.add(4, 5);
+        ShortestPathsTester t0 = new ShortestPathsTester(G0, 3, 4);
+        t0.setWeight(3, 2, 3);
+        t0.setWeight(3, 1, 1);
+        t0.setWeight(3, 4, 4);
+        t0.setWeight(2, 5, 2);
+        t0.setWeight(2, 4, 5);
+        t0.setWeight(1, 4, 2);
+        t0.setWeight(1, 5, 5);
+        t0.setWeight(4, 5, 1);
+        t0.setPaths();
+        assertEquals(1, t0.getWeight(1), 0.1);
+        assertEquals(3, t0.getWeight(2), 0.1);
+        assertEquals(0, t0.getWeight(3), 0.1);
+        assertEquals(3, t0.getWeight(4), 0.1);
+        assertEquals(5, t0.getWeight(5), 0.1);
+        List<Integer> expected = Arrays.<Integer>asList(3, 1, 4);
+        assertEquals("Wrong path", expected, t0.pathTo());
+    }
+
+    // @Test
+    public void testSimplePath2() {
+        DirectedGraph G0 = new DirectedGraph();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add(3, 2);
+        G0.add(3, 1);
+        G0.add(3, 4);
+        G0.add(2, 5);
+        G0.add(2, 4);
+        G0.add(1, 4);
+        G0.add(1, 5);
+        G0.add(4, 5);
+        ShortestPathsTester t0 = new ShortestPathsTester(G0, 3);
+        t0.setWeight(3, 2, 3);
+        t0.setWeight(3, 1, 1);
+        t0.setWeight(3, 4, 4);
+        t0.setWeight(2, 5, 2);
+        t0.setWeight(2, 4, 5);
+        t0.setWeight(1, 4, 2);
+        t0.setWeight(1, 5, 5);
+        t0.setWeight(4, 5, 1);
+        t0.setPaths();
+        assertEquals(1, t0.getWeight(1), 0.1);
+        assertEquals(3, t0.getWeight(2), 0.1);
+        assertEquals(0, t0.getWeight(3), 0.1);
+        assertEquals(3, t0.getWeight(4), 0.1);
+        assertEquals(4, t0.getWeight(5), 0.1);
+    }
+
+    @Test
+    public void testSimplePath3() {
+        DirectedGraph G0 = new DirectedGraph();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add();
+        G0.add(4, 2);
+        G0.add(4, 3);
+        G0.add(4, 5);
+        G0.add(2, 3);
+        G0.add(5, 3);
+        G0.add(5, 6);
+        ShortestPathsTester t0 = new ShortestPathsTester(G0, 4, 3);
+        t0.setWeight(4, 2, 12.2);
+        t0.setWeight(4, 3, 102.0);
+        t0.setWeight(4, 5, 11.2);
+        t0.setWeight(2, 3, 6.5);
+        t0.setWeight(5, 3, 9.1);
+        t0.setWeight(5, 6, 30);
+        t0.setPaths();
+        List<Integer> expected = Arrays.<Integer>asList(4, 2, 3);
+        assertEquals("Wrong path", expected, t0.pathTo());
+        assertEquals(Double.POSITIVE_INFINITY, t0.getWeight(6), 0.1);
+    }
+
+    public class ShortestPathsTester extends SimpleShortestPaths {
+
+        public ShortestPathsTester(Graph G, int source) {
+            this(G, source, 0);
+        }
+
+        public ShortestPathsTester(Graph G, int source, int dest) {
+            super(G, source, dest);
+            edges = new double[G.vertexSize()][G.vertexSize()];
+        }
+
+        @Override
+        protected double getWeight(int v, int w) {
+            return edges[v - 1][w - 1];
+        }
+
+        protected void setWeight(int v, int w, double weight) {
+            edges[v - 1][w - 1] = weight;
+        }
+
+        /** Keeps track of the weight of each edge. */
+        double[][] edges;
+    }
+
+}

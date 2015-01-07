@@ -1,0 +1,70 @@
+import java.io.Reader;
+import java.io.IOException;
+import java.io.StringReader;
+
+/** Translating Reader: a stream that is a translation of an
+ *  existing reader.
+ *  @author Carlos Flores */
+public class TrReader extends Reader {
+    /** Stores the Reader source. */
+    private Reader _source;
+
+    /** Characters in this string will be translated. */
+    private String _from;
+
+    /** Characters will be translated to characters in this string. */
+    private String _to;
+
+    public static void main(String[] args) {
+        Reader in = new StringReader("xabdc");
+        TrReader translation = new TrReader(in, "abcd", "ABCD");
+        while (true) {
+            try {
+                int c = translation.read();
+                if (c == -1) {
+                    break;
+                }
+                System.out.println("aaa: " + (char) c);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /** A new TrReader that produces the stream of characters produced
+     *  by STR, converting all characters that occur in FROM to the
+     *  corresponding characters in TO. That is, change occurrences of
+     *  FROM.charAt(0) to TO.charAt(0), etc., leaving other characters
+     *  unchanged.  FROM and TO must have the same length. */
+    public TrReader(Reader str, String from, String to) {
+        _source = str;
+        _from = from;
+        _to = to;
+    }
+
+    /** Reads characters into a portion of an array CBUF, starting at OFF, and
+     * going up to LEN. It returns the number of characters read. */
+    public int read(char[] cbuf, int off, int len) throws IOException {
+        int c = _source.read();
+        if (c == -1) {
+            return -1;
+        }
+        for (int i = 0; i < _from.length(); i++) {
+            if ((char) c == _from.charAt(i)) {
+                cbuf[off] = _to.charAt(i);
+                return 1;
+            }
+        }
+        cbuf[off] = (char) c;
+        return 1;
+    }
+
+    /** Closes the input stream (from Reader). */
+    public void close() {
+        try {
+            _source.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

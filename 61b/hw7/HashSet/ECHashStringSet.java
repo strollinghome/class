@@ -1,0 +1,85 @@
+import java.util.ArrayList;
+
+/** Implementation of a StringSet with an internal hash table.
+ * @author Carlos A. Flores-Arellano.*/
+public class ECHashStringSet implements StringSet {
+
+    /** Initial array size.*/
+    private static final int DEFAULT_SIZE = 17;
+
+    /** Load factor.*/
+    private float loadFactor = 0.7f;
+
+    /** Current array size.*/
+    private int arraySize;
+
+    /** Current array.*/
+    private ArrayList<String>[] _table;
+
+    /** Number of items in this table*/
+    private int items;
+
+    /** Initialized the array with default size.*/
+    public ECHashStringSet() {
+        arraySize = DEFAULT_SIZE;
+        _table = (ArrayList<String>[]) new ArrayList[DEFAULT_SIZE];
+        items = 0;
+    }
+
+    /** Constructor with specified capacity. */
+    public ECHashStringSet(int capacity) {
+        arraySize = capacity;
+        _table = (ArrayList<String>[]) new ArrayList[capacity];
+        items = 0;
+    }
+
+    /** Adds item S to the table if its not contained.*/
+    public void put(String s) {
+        if (!contains(s)) {
+            int index = hashCode(s);
+            ArrayList<String> head = _table[index];
+            if (head == null) {
+                _table[index] = new ArrayList<>();
+                _table[index].add(s);
+            } else {
+                head.add(s);
+            }
+            items = items + 1;
+            float currFactor;
+            currFactor = items / (float) arraySize;
+            if (currFactor > loadFactor) {
+                resize();
+            }
+        }
+    }
+
+    /** @return true if the table contains S*/
+    public boolean contains(String s) {
+        int index = hashCode(s);
+        ArrayList head = _table[index];
+        if (head == null) {
+            return false;
+        }
+        return head.contains(s);
+    }
+
+    /** Resizes the current table.*/
+    private void  resize() {
+        ECHashStringSet tempSet = new ECHashStringSet(arraySize * 2);
+        for (ArrayList item : _table) {
+            if (item != null) {
+                String[] bucket = 
+                    (String[]) item.toArray(new String[item.size()]);
+                for (String s : bucket) {
+                    tempSet.put(s);
+                }
+            }
+        }
+        _table = tempSet._table;
+        arraySize = tempSet.arraySize;
+    }
+
+    private int hashCode(String s) {
+        return s.hashCode() & 0x7fffffff % arraySize;
+    }
+}

@@ -1,0 +1,212 @@
+package graph;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+/** Unit tests for the Graph class.
+ *  @author Carlos A. Flores-Arellano.
+ */
+public class GraphTest {
+
+    @Test
+    public void emptyGraph() {
+        DirectedGraph g = new DirectedGraph();
+        assertEquals("Initial graph has vertices", 0, g.vertexSize());
+        assertEquals("Initial graph has edges", 0, g.edgeSize());
+    }
+
+    @Test
+    public void testVerticesMethods() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        assertEquals("Wrong number of vertices", 3, G.vertexSize());
+        G.remove(3);
+        G.remove(2);
+        assertEquals("Wrong number of vertices", 1, G.vertexSize());
+    }
+
+    @Test
+    public void testAddRemove() {
+        DirectedGraph G = new DirectedGraph();
+        assertEquals("Wrong vertex label", 1, G.add());
+        assertEquals("Wrong vertex label", 2, G.add());
+        assertEquals("Wrong vertex label", 3, G.add());
+        assertEquals("Wrong vertex label", 4, G.add());
+        assertEquals("Wrong vertex label", 1, G.add(1, 2));
+        assertEquals("Wrong vertex label", 1, G.add(1, 3));
+        assertEquals("Wrong vertex label", 2, G.add(2, 3));
+        assertEquals("Wrong vertex label", 3, G.add(3, 4));
+        assertEquals("Wrong vertex label", 4, G.add(4, 2));
+        assertEquals("Wrong vertex label", 4, G.add(4, 1));
+        assertEquals("Wrong number of verices", 4, G.vertexSize());
+        assertEquals("Wrong number of edges", 6, G.edgeSize());
+        G.remove(3);
+        assertEquals("Wrong number of vertices", 3, G.vertexSize());
+        assertEquals("Wrong number of edges", 3, G.edgeSize());
+        assertFalse(G.contains(3));
+        assertEquals("Wrong vertex label", 3, G.add());
+        assertEquals("Wrong number of vertices", 4, G.vertexSize());
+        assertEquals("Wrong number of edges", 3, G.edgeSize());
+        assertTrue(G.contains(3));
+        G.remove(1, 2);
+        G.remove(4, 2);
+        G.remove(4, 1);
+        assertEquals("Wrong number of edges", 0, G.edgeSize());
+    }
+
+    @Test
+    public void testMaxDegreeOutDegree() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 4);
+        G.add(2, 3);
+        G.add(2, 5);
+        G.add(3, 4);
+        G.add(4, 7);
+        G.add(5, 4);
+        G.add(5, 6);
+        G.add(7, 5);
+        assertEquals("Wrong number of vertices", 7, G.vertexSize());
+        assertEquals("Wrong number of edges", 8, G.edgeSize());
+        assertEquals("Wrong max vertex", 7, G.maxVertex());
+        assertEquals("Wrong out-degree", 1, G.outDegree(4));
+        G.remove(7);
+        G.remove(1);
+        assertEquals("Wrong number of vertices", 5, G.vertexSize());
+        assertEquals("Wrong number of edges", 5, G.edgeSize());
+        assertEquals("Wrong max vertex", 6, G.maxVertex());
+        assertEquals("Wrong out-degree", 0, G.outDegree(4));
+        G.add();
+        G.add();
+        G.add();
+        assertEquals("Wrong number of vertices", 8, G.vertexSize());
+        assertEquals("Wrong max degree", 8, G.maxVertex());
+    }
+
+    @Test
+    public void testEdgeId() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 4);
+        G.add(4, 1);
+        assertEquals("Wrong edgeId", 1, G.edgeId(1, 4));
+        assertEquals("Wrong edgeId", 2, G.edgeId(4, 1));
+        G.remove(1, 4);
+        assertEquals("Wrong edgeId", 2, G.edgeId(4, 1));
+        G.remove(4, 1);
+        G.add(4, 1);
+        assertEquals("Wrong edgeId", 2, G.edgeId(4, 1));
+    }
+
+    @Test
+    public void testVertices() {
+        DirectedGraph G = new DirectedGraph();
+        Iteration<Integer> vertices;
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        vertices = G.vertices();
+        int vertex = 1;
+        for (Integer i : vertices) {
+            assertEquals("Wrong vertex", vertex, (int) i);
+            vertex = vertex + 1;
+        }
+        G.remove(3);
+        vertices = G.vertices();
+        assertEquals("Wrong vertex", 1, (int) vertices.next());
+        assertEquals("Wrong vertex", 2, (int) vertices.next());
+        assertEquals("Wrong vertex", 4, (int) vertices.next());
+        assertFalse(vertices.hasNext());
+    }
+
+    @Test
+    public void testSuccesor() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(4, 1);
+        G.add(4, 2);
+        G.add(4, 3);
+        G.add(4, 4);
+        assertEquals("Wrong successor", 0, G.successor(5, 5));
+        assertEquals("Wrong successor", 1, G.successor(4, 0));
+        assertEquals("Wrong successor", 2, G.successor(4, 1));
+        assertEquals("Wrong successor", 3, G.successor(4, 2));
+        assertEquals("Wrong successor", 4, G.successor(4, 3));
+    }
+
+    @Test
+    public void testEdges() {
+        DirectedGraph G = new DirectedGraph();
+        int[] edge;
+        Iteration<int[]> edges;
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        G.add(3, 4);
+        G.add(1, 2);
+        G.add(2, 3);
+        G.add(1, 3);
+        edges = G.edges();
+        edge = edges.next();
+        assertEquals(1, edge[0]);
+        assertEquals(2, edge[1]);
+        edge = edges.next();
+        assertEquals(1, edge[0]);
+        assertEquals(3, edge[1]);
+        edge = edges.next();
+        assertEquals(2, edge[0]);
+        assertEquals(3, edge[1]);
+        edge = edges.next();
+        assertEquals(3, edge[0]);
+        assertEquals(4, edge[1]);
+        assertFalse(edges.hasNext());
+    }
+
+    @Test
+    public void testIdUndirected() {
+        UndirectedGraph G = new UndirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add(1, 2);
+        G.add(3, 1);
+        assertEquals("Wrong edgeId", 1, G.edgeId(1, 2));
+        assertEquals("Wrong edgeId", 1, G.edgeId(2, 1));
+        assertEquals("Wrong edgeId", 2, G.edgeId(3, 1));
+        assertEquals("Wrong edgeId", 2, G.edgeId(1, 3));
+    }
+
+    @Test
+    public void testMine() {
+        DirectedGraph G = new DirectedGraph();
+        G.add();
+        G.add();
+        G.add();
+        G.add();
+        assertTrue(G.mine(1));
+        assertFalse(G.mine(5));
+        assertTrue(G.mine(4));
+        G.remove(4);
+        assertFalse(G.mine(4));
+        G.add();
+        G.add();
+        assertTrue(G.mine(5));
+        assertTrue(G.mine(4));
+    }
+}

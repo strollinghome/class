@@ -1,0 +1,5 @@
+1. thetha(x^2).
+2. thetha (log(x^3)).
+3. thetha (n^2).
+4. thetha (m * n).
+5. thetha (2^n).

@@ -1,0 +1,40 @@
+Results for InsertRandomSpeedTest for N = 1000000:
+BSTStringSet:       2.40 sec.
+ECHashStringSet:    1.68 sec.
+java.util.TreeSet:  1.55 sec.
+java.util.HashSet:  1.45 sec.
+
+Results for InsertRandomSpeedTest for N = 2000000:
+BSTStringSet:       6.24 sec.
+ECHashStringSet:    3.34 sec.
+java.util.TreeSet:  5.83 sec.
+java.util.HashSet:  3.43 sec.
+
+Does your ECHashStringSet look roughly linear or roughly quadratic in its
+scaling behavior for random strings?
+
+In theory a good hash table should retain linear operations, and although the
+time seems to be increasing by more in steps the structure is linear.
+
+Results for InsertInOrderSpeedTest for N = 10000:
+BSTStringSet:       0.41 sec.
+ECHashStringSet:    0.02 sec.
+java.util.TreeSet:  0.02 sec.
+java.util.HashSet:  0.01 sec.
+
+Results for InsertInOrderSpeedTest for N = 20000:
+BSTStringSet:       1.32 sec.
+ECHashStringSet:    0.03 sec.
+java.util.TreeSet:  0.03 sec.
+java.util.HashSet:  0.02 sec.
+
+
+Does your **BST**StringSet look roughly linear or roughly quadratic in its
+scaling behavior for in order strings? 
+
+The behavior should be linear. If strings are inserted in order then the
+structure is similar the the one of a linked-list.
+
+
+Before submitting, make sure that your ECHashStringSet is capable of handling
+inputs of size 1000000 in a reasonable amount of time (less than a minute).

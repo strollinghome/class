@@ -1,0 +1,67 @@
+/** A WeirdList holds a sequence of integers.
+
+    For part 3a, implement enough so that length() and print() work.
+    For part 3b, implement map and WeirdListClient.add.
+    @author Carlos Flores. */
+public class WeirdList {
+
+    /** The head of WeirdList. */
+    private int _head;
+
+    /** The tail of the WeirdList. */
+    private WeirdList _tail;
+
+    /** The empty sequence of integers. */
+    public static final WeirdList EMPTY = new EmptyWeirdList();
+
+    /** A new WeirdList whose head is HEAD and tail is TAIL. */
+    public WeirdList(int head, WeirdList tail) {
+        _head = head;
+        _tail = tail;
+    }
+
+    /** Constructor for the empty WeirdList. */
+    public WeirdList() {
+        _head = 0;
+        _tail = null;
+    }
+
+    /** Returns the number of elements in the sequence that
+     *  starts with THIS. */
+    public int length() {
+        return 1 + _tail.length();
+    }
+
+    /** Print the contents of THIS WeirdList on the standard output
+     *  (on one line, each followed by a blank).  Does not print
+     *  an end-of-line. */
+    public void print() {
+        System.out.print(_head + " ");
+        _tail.print();
+    }
+
+    /** Part 3b: Apply FUNC.apply to every element of THIS WeirdList in
+     *  sequence, and return a WeirdList of the resulting values. */
+    public WeirdList map(IntUnaryFunction func) {
+        return new WeirdList(func.apply(_head), _tail.map(func));
+    }
+
+    /** Represents the empty WeirdList. */
+    private static class EmptyWeirdList extends WeirdList {
+
+        /** Returns the length of an empty list. */
+        public int length() {
+            return 0;
+        }
+
+        /** Returns the value of mapping FUNC over an empty WeirdList. */
+        public WeirdList map(IntUnaryFunction func) {
+            return EMPTY;
+        }
+
+        /** Prints the end of a WeridList. */
+        public void print() {
+            System.out.println();
+        }
+    }
+}

@@ -1,0 +1,61 @@
+package jump61;
+
+import static jump61.Side.*;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+
+
+
+/** Unit tests of Boards.
+ *  @author Carlos A. Flores-Arellano.
+ */
+public class AITest {
+
+    @Test
+    public void testStaticEval() {
+        Writer output = new OutputStreamWriter(System.out);
+        Game game = new Game(new InputStreamReader(System.in),
+                        output, output,
+                        new OutputStreamWriter(System.err));
+        Board B = new MutableBoard(3);
+        B.addSpot(RED, B.sqNum(1, 2));
+        B.addSpot(BLUE, B.sqNum(2, 1));
+        B.addSpot(RED, B.sqNum(3, 3));
+        B.addSpot(BLUE, B.sqNum(2, 3));
+        AI smarty = new AI(game, RED);
+        int best = smarty.staticEval(RED, B);
+        assertEquals("not equal", 4, best);
+
+        B = new MutableBoard(2);
+        B.addSpot(RED, B.sqNum(1, 1));
+        B.addSpot(BLUE, B.sqNum(1, 2));
+        smarty = new AI(game, RED);
+        best = smarty.staticEval(RED, B);
+        assertEquals("not equal", 4, best);
+
+    }
+
+    // @Test
+    // public void testStaticEvalMove() {
+    //     Writer output = new OutputStreamWriter(System.out);
+    //     Game game = new Game(new InputStreamReader(System.in),
+    //                     output, output,
+    //                     new OutputStreamWriter(System.err));
+    //     Board B = new MutableBoard(3);
+    //     B.addSpot(RED, B.sqNum(1, 2));
+    //     B.addSpot(BLUE, B.sqNum(2, 1));
+    //     B.addSpot(RED, B.sqNum(3, 3));
+    //     B.addSpot(BLUE, B.sqNum(2, 3));
+    //     Move expected = new Move(5, 4);
+    //     AI smarty = new AI(game, RED);
+    //     Move actual = smarty.staticEval(RED, B, 100);
+    //     assertEquals("not equal", expected._value, actual._value);
+    //     assertEquals("not equal", expected._move, actual._move);
+    // }
+
+}

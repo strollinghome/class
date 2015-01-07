@@ -1,0 +1,271 @@
+package db61b;
+
+import java.io.PrintStream;
+
+import java.util.ArrayList;
+import java.util.Scanner;
+
+import static db61b.Utils.*;
+import static db61b.Tokenizer.*;
+
+/** An object that reads and interprets a sequence of commands from an
+ *  input source.
+ *  @author Carlos A. Flores-Arellano.*/
+class CommandInterpreter {
+
+    /** A new CommandInterpreter executing commands read from INP, writing
+     *  prompts on PROMPTER, if it is non-null. */
+    CommandInterpreter(Scanner inp, PrintStream prompter) {
+        _input = new Tokenizer(inp, prompter);
+        _database = new Database();
+    }
+
+    /** Parse and execute one statement from the token stream.  Return true
+     *  iff the command is something other than quit or exit. */
+    boolean statement() {
+        switch (_input.peek()) {
+        case "create":
+            createStatement();
+            break;
+        case "load":
+            loadStatement();
+            break;
+        case "exit": case "quit":
+            exitStatement();
+            return false;
+        case "*EOF*":
+            return false;
+        case "insert":
+            insertStatement();
+            break;
+        case "print":
+            printStatement();
+            break;
+        case "select":
+            selectStatement();
+            break;
+        case "store":
+            storeStatement();
+            break;
+        default:
+            throw error("unrecognizable command");
+        }
+        return true;
+    }
+
+    /** Parse and execute a create statement from the token stream. */
+    void createStatement() {
+        _input.next("create");
+        _input.next("table");
+        String name = name();
+        Table table = tableDefinition();
+        _database.put(name, table);
+    }
+
+    /** Parse and execute an exit or quit statement. Actually does nothing
+     *  except check syntax, since statement() handles the actual exiting. */
+    void exitStatement() {
+        if (!_input.nextIf("quit")) {
+            _input.next("exit");
+        }
+        _input.next(";");
+    }
+
+    /** Parse and execute an insert statement from the token stream. */
+    void insertStatement() {
+        _input.next("insert");
+        _input.next("into");
+        Table table = tableName();
+        _input.next("values");
+
+        ArrayList<String> values = new ArrayList<>();
+        values.add(literal());
+        while (_input.nextIf(",")) {
+            values.add(literal());
+        }
+        _input.next(";");
+        table.add(new Row(values.toArray(new String[values.size()])));
+    }
+
+    /** Parse and execute a load statement from the token stream. */
+    void loadStatement() {
+        _input.next("load");
+        String name = _input.next();
+        Table table = Table.readTable(name);
+        _database.put(name, table);
+        _input.next(";");
+        System.out.printf("Loaded %s.db%n", name);
+    }
+
+    /** Parse and execute a store statement from the token stream. */
+    void storeStatement() {
+        _input.next("store");
+        String name = _input.peek();
+        Table table = tableName();
+        _input.next(";");
+        table.writeTable(name);
+        System.out.printf("Stored %s.db%n", name);
+    }
+
+    /** Parse and execute a print statement from the token stream. */
+    void printStatement() {
+        _input.next("print");
+        String name = _input.next();
+        Table t0 = _database.get(name);
+        if (t0 != null) {
+            System.out.printf("Contents of %s:%n", name);
+            t0.print();
+        } else {
+            throw error("could not find %s.db", name);
+        }
+        _input.next(";");
+    }
+
+    /** Parse and execute a select statement from the token stream. */
+    void selectStatement() {
+        Table t0 = selectClause();
+        System.out.printf("Search results:%n");
+        t0.print();
+    }
+
+    /** Parse and execute a table definition, returning the specified
+     *  table. */
+    Table tableDefinition() {
+        Table table;
+        if (_input.nextIf("(")) {
+            ArrayList<String> columnTitles = new ArrayList<>();
+            while (!_input.nextIf(")")) {
+                columnTitles.add(literal());
+                if (!_input.nextIf(",")) {
+                    _input.next(";");
+                    break;
+                }
+            }
+            table = new Table(columnTitles);
+        } else if (_input.nextIf("as")) {
+            table = selectClause();
+        } else {
+            throw error("unexpected token '%s':", _input.next());
+        }
+        return table;
+    }
+
+    /** Parse and execute a select clause from the token stream, returning the
+     *  resulting table.*/
+    Table selectClause() {
+        _input.next("select");
+        ArrayList<String> columnTitles = columns();
+        ArrayList<Condition> conds = null;
+        String tableName = name();
+        Table t0  = _database.get(tableName);
+        if (t0 == null) {
+            throw error("Could not find %s", tableName);
+        }
+        if (_input.nextIf("where")) {
+            conds = conditionClause(t0);
+            Table t1 = t0.select(columnTitles, conds);
+            return t1;
+        } else if (_input.nextIf(",")) {
+            tableName = name();
+            Table t1 = _database.get(tableName);
+            if (t1 == null) {
+                throw error("could not find %s", tableName);
+            }
+            if (_input.nextIf(";")) {
+                Table t2 = t0.select(t1, columnTitles, null);
+                return t2;
+            } else if (_input.nextIf("where")) {
+                conds = conditionClause(new Table[]{t0, t1});
+                Table t2 = t0.select(t1, columnTitles, conds);
+                return t2;
+            }
+        }
+        _input.next(";");
+        Table t1 = t0.select(columnTitles, conds);
+        return t1;
+    }
+
+    /** Extracts and returns an ArrayList with the column titles from
+    a select clause.*/
+    ArrayList<String> columns() {
+        ArrayList<String> titles = new ArrayList<>();
+        while (!_input.nextIf("from")) {
+            titles.add(columnName());
+            if (!_input.nextIf(",")) {
+                _input.next();
+                break;
+            }
+        }
+        return titles;
+    }
+
+    /** Parse and return a valid name (identifier) from the token stream. */
+    String name() {
+        return _input.next(Tokenizer.IDENTIFIER);
+    }
+
+    /** Parse and return a valid column name from the token stream. Column
+     *  names are simply names; we use a different method name to clarify
+     *  the intent of the code. */
+    String columnName() {
+        return name();
+    }
+
+    /** Parse a valid table name from the token stream, and return the Table
+     *  that it designates, which must be loaded. */
+    Table tableName() {
+        String name = name();
+        Table table = _database.get(name);
+        if (table == null) {
+            throw error("unknown table: %s", name);
+        }
+        return table;
+    }
+
+    /** Parse a literal and return the string it represents (i.e., without
+     *  single quotes). */
+    String literal() {
+        String lit = _input.next(Tokenizer.LITERAL);
+        return lit.substring(1, lit.length() - 1).trim();
+    }
+
+    /** Parse and return a list of Conditions that apply to TABLES from the
+     *  token stream.  This denotes the conjunction (`and') zero
+     *  or more Conditions. */
+    ArrayList<Condition> conditionClause(Table... tables) {
+        ArrayList<Condition> conditions = new ArrayList<>();
+        Condition cond0 = condition(tables);
+        conditions.add(cond0);
+        while (_input.nextIf("and")) {
+            Condition cond1 = condition(tables);
+            conditions.add(cond1);
+        }
+        _input.next(";");
+        return conditions;
+    }
+
+    /** Parse and return a Condition that applies to TABLES from the
+     *  token stream. */
+    Condition condition(Table... tables) {
+        Column col0 = new Column(name(), tables);
+        String relation = _input.next(Tokenizer.RELATION);
+        if (_input.nextIs(Tokenizer.LITERAL)) {
+            String condName = literal();
+            return new Condition(col0, relation, condName);
+        }
+        Column col1 = new Column(name(), tables);
+        return new Condition(col0, relation, col1);
+    }
+
+    /** Advance the input past the next semicolon. */
+    void skipCommand() {
+        while (!_input.nextIf(";") && !_input.nextIf("*EOF*")) {
+            _input.next();
+        }
+    }
+
+    /** The command input source. */
+    private Tokenizer _input;
+    /** Database containing all tables. */
+    private Database _database;
+}

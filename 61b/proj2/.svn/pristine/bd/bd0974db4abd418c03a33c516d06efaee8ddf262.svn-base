@@ -1,0 +1,470 @@
+package jump61;
+
+import java.io.Reader;
+import java.io.Writer;
+import java.io.PrintWriter;
+
+import java.util.Scanner;
+import java.util.Random;
+import java.util.Observable;
+
+import static jump61.Side.*;
+import static jump61.GameException.error;
+import java.util.InputMismatchException;
+
+/** Main logic for playing (a) game(s) of Jump61.
+ *  @author Carlos A. Flores-Arellano.
+ */
+class Game extends Observable {
+
+    /** Name of resource containing help message. */
+    private static final String HELP = "jump61/Help.txt";
+
+    /** A list of all commands. */
+    private static final String[] COMMAND_NAMES = {
+        "auto", "clear", "dump", "help", "manual",
+        "quit", "seed", "set", "size", "start", "new"
+    };
+
+    /** A new Game that takes command/move input from INPUT, prints
+     *  normal output on OUTPUT, prints prompts for input on PROMPTS,
+     *  and prints error messages on ERROROUTPUT. The Game now "owns"
+     *  INPUT, PROMPTS, OUTPUT, and ERROROUTPUT, and is responsible for
+     *  closing them when its play method returns. */
+    Game(Reader input, Writer prompts, Writer output, Writer errorOutput) {
+        _exit = -1;
+        _board = new MutableBoard(Defaults.BOARD_SIZE);
+        _readonlyBoard = new ConstantBoard(_board);
+        _prompter = new PrintWriter(prompts, true);
+        _inp = new Scanner(input);
+        _inp.useDelimiter("\\p{Blank}*(?=[\r\n])|(?<=\n)|\\p{Blank}+");
+        _out = new PrintWriter(output, true);
+        _err = new PrintWriter(errorOutput, true);
+    }
+
+    /** Returns a readonly view of the game board.  This board remains valid
+     *  throughout the session. */
+    Board getBoard() {
+        return _readonlyBoard;
+    }
+
+    /** Return true iff there is a game in progress. */
+    boolean gameInProgress() {
+        return _playing;
+    }
+
+    /** Play a session of Jump61.  This may include multiple games,
+     *  and proceeds until the user exits.  Returns an exit code: 0 is
+     *  normal; any positive quantity indicates an error.  */
+    int play() {
+        _out.println("Welcome to " + Defaults.VERSION);
+        _out.flush();
+        _board.clear(Defaults.BOARD_SIZE);
+        _players[Side.RED.ordinal()] = new HumanPlayer(this, Side.RED);
+        _players[Side.BLUE.ordinal()] = new AI(this, Side.BLUE);
+        while (!gameInProgress()) {
+            promptForNext();
+            readExecuteCommand();
+            if (_exit == 0) {
+                break;
+            }
+        }
+        _prompter.close();
+        _out.close();
+        _err.close();
+        return _exit;
+    }
+
+    /** Get a move from my input and place its row and column in
+     *  MOVE.  Returns true if this is successful, false if game stops
+     *  or ends first. */
+    boolean getMove(int[] move) {
+        while (_playing && _move[0] == 0) {
+            if (promptForNext()) {
+                readExecuteCommand();
+            } else {
+                _exit = 0;
+                return false;
+            }
+        }
+        if (_move[0] > 0) {
+            move[0] = _move[0];
+            move[1] = _move[1];
+            _move[0] = 0;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /** Add a spot to R C, if legal to do so. */
+    void makeMove(int r, int c) {
+        assert _board.isLegal(_board.whoseMove(), r, c);
+        makeMove(_board.sqNum(r, c));
+    }
+
+    /** Add a spot to square #N, if legal to do so. */
+    void makeMove(int n) {
+        assert _board.isLegal(_board.whoseMove(), n);
+        try {
+            _board.addSpot(_board.whoseMove(), n);
+            saveMove(_board.row(n), _board.col(n));
+        } catch (GameException e) {
+                reportError("invalid move: %d %d", _board.row(n), _board.col(n));
+        }
+    }
+
+    /** Report a move by PLAYER to ROW COL. */
+    void reportMove(Side player, int row, int col) {
+        message("%s moves %d %d.%n", player.toCapitalizedString(), row, col);
+    }
+
+    /** Return a random integer in the range [0 .. N), uniformly
+     *  distributed.  Requires N > 0. */
+    int randInt(int n) {
+        return _random.nextInt(n);
+    }
+
+    /** Send a message to the user as determined by FORMAT and ARGS, which
+     *  are interpreted as for String.format or PrintWriter.printf. */
+    void message(String format, Object... args) {
+        _out.printf(format, args);
+    }
+
+    /** Check whether we are playing and there is an unannounced winner.
+     *  If so, announce and stop play. */
+    private void checkForWin() {
+        Side winner = _board.getWinner();
+        if (winner != null) {
+            announceWinner();
+            _playing = false;
+        } else {
+            _playing = true;
+        }
+    }
+
+    /** Send announcement of winner to my user output. */
+    private void announceWinner() {
+        _out.printf("%s wins.%n", _board.getWinner().toCapitalizedString());
+    }
+
+    /** Make the player of COLOR an AI for subsequent moves. */
+    private void setAuto(Side color) {
+        _playing = false;
+        _players[color.ordinal()] = new AI(this, color);
+        _inp.nextLine();
+    }
+
+    /** Make the player of COLOR take manual input from the user for
+     *  subsequent moves. */
+    private void setManual(Side color) {
+        _playing = false;
+        _players[color.ordinal()] = new HumanPlayer(this, color);
+        _inp.nextLine();
+    }
+
+    /** Return the Player playing COLOR. */
+    private Player getPlayer(Side color) {
+        return _players[color.ordinal()];
+    }
+
+    /** Set getPlayer(COLOR) to PLAYER. */
+    private void setPlayer(Side color, Player player) {
+        _players[color.ordinal()] = player;
+    }
+
+    /** Stop any current game and clear the board to its initial
+     *  state. */
+    void clear() {
+        _playing = false;
+        _board.clear(_board.size());
+        _inp.nextLine();
+    }
+
+    /** Print the current board using standard board-dump format. */
+    private void dump() {
+        _out.print(_board);
+        _out.flush();
+        _inp.nextLine();
+    }
+
+    /** Print a board with row/column numbers. */
+    private void printBoard() {
+        _out.println(_board.toDisplayString());
+    }
+
+    /** Print a help message. */
+    private void help() {
+        Main.printHelpResource(HELP, _out);
+        _inp.nextLine();
+    }
+
+    /** Seed the random-number generator with SEED. */
+    private void setSeed(long seed) {
+        _random.setSeed(seed);
+    }
+
+    /** Place SPOTS spots on square R:C and color the square red or
+     *  blue depending on whether COLOR is "r" or "b".  If SPOTS is
+     *  0, clears the square, ignoring COLOR.  SPOTS must be less than
+     *  the number of neighbors of square R, C. */
+    private void setSpots(int r, int c, int spots, String color) {
+        int neighbors = _board.neighbors(r, c);
+        if (spots < 0 || spots > neighbors || !_board.exists(r, c)) {
+            reportError(
+            "invalid request to put %d spots on square %d %d", spots, r, c);
+        } else {
+            _playing = false;
+            if (spots == 0) {
+                _board.set(r, c, 1, Side.WHITE);
+            } else if (color.equals("r")) {
+                _board.set(r, c, spots, Side.RED);
+            } else if (color.equals("b")) {
+                _board.set(r, c, spots, Side.BLUE);
+            }
+        }
+        _inp.nextLine();
+    }
+
+    /** Stop any current game and set the board to an empty N x N board
+     *  with numMoves() == 0.  Requires 2 <= N <= 10. */
+    private void setSize(int n) {
+        if (n < 2 || n > 10) {
+            reportError("size must be between %d and %d", 2, 10);
+        } else {
+            _playing = false;
+            _board.clear(n);
+        }
+        _inp.nextLine();
+        announce();
+    }
+
+    /** Begin accepting moves for game.  If the game is won,
+     *  immediately print a win message and end the game. */
+    private void restartGame() {
+        _inp.nextLine();
+        _playing = true;
+        checkForWin();
+        Side color;
+        int[] currentMoves = new int[2];
+        while (getMove(currentMoves)) {
+            checkForWin();
+        }
+        announce();
+    }
+
+    /** Save move R C in _move.  Error if R and C do not indicate an
+     *  existing square on the current board. */
+    private void saveMove(int r, int c) {
+        if (!_board.exists(r, c)) {
+            reportError("move %d %d out of bounds", r, c);
+        } else {
+            _move[0] = r;
+            _move[1] = c;
+        }
+    }
+
+    /** Returns a color (player) name from _inp: either RED or BLUE.
+     *  Throws an exception if not present. */
+    private Side readSide() {
+        return Side.parseSide(_inp.next("[rR][eE][dD]|[Bb][Ll][Uu][Ee]"));
+    }
+
+    /** Read and execute one command.  Leave the input at the start of
+     *  a line, if there is more input. */
+    private void readExecuteCommand() {
+        String command;
+        Side color;
+        Player player;
+        color = _board.whoseMove();
+        player = getPlayer(color);
+        if (_playing && _inp.hasNextInt() || (player instanceof AI)) {
+            color = _board.whoseMove();
+            player = getPlayer(color);
+            player.makeMove();
+            if (player instanceof AI) {
+                reportMove(color, _move[0], _move[1]);
+            }
+            _inp.nextLine();
+        } else {
+            command = _inp.next();
+            executeCommand(command);
+        }
+    }
+
+    /** Return the full, lower-case command name that uniquely fits
+     *  COMMAND.  COMMAND may be any prefix of a valid command name,
+     *  as long as that name is unique.  If the name is not unique or
+     *  no command name matches, returns COMMAND in lower case. */
+    private String canonicalizeCommand(String command) {
+        command = command.toLowerCase();
+
+        if (command.startsWith("#")) {
+            return "#";
+        }
+
+        String fullName;
+        fullName = null;
+        for (String name : COMMAND_NAMES) {
+            if (name.equals(command)) {
+                return command;
+            }
+            if (name.startsWith(command)) {
+                if (fullName != null) {
+                    reportError("%s is not a unique command abbreviation",
+                                command);
+                }
+                fullName = name;
+            }
+        }
+        if (fullName == null) {
+            return command;
+        } else {
+            return fullName;
+        }
+    }
+
+    /** Gather arguments and execute command CMND.  Throws GameException
+     *  on errors. */
+    private void executeCommand(String cmnd) {
+        switch (canonicalizeCommand(cmnd)) {
+        case "\n": case "\r\n":
+            return;
+        case "#":
+            break;
+        case "auto":
+            try {
+                setAuto(readSide());
+                // _inp.nextLine();
+            } catch (InputMismatchException e) {
+                reportError("syntax error in 'auto' command");
+                _inp.nextLine();
+            }
+            break;
+        case "clear":
+            clear();
+            break;
+        case "dump":
+            dump();
+            break;
+        case "help":
+            help();
+            break;
+        case "manual":
+            try {
+                setManual(readSide());
+            } catch (InputMismatchException e) {
+                reportError("syntax error in 'manual' command");
+                _inp.nextLine();
+            }
+            break;
+        case "quit":
+            _exit = 0;
+            _playing = false;
+            break;
+        case "seed":
+            setSeed(_inp.nextLong());
+            break;
+        case "set":
+            try {
+                setSpots(_inp.nextInt(), _inp.nextInt(), _inp.nextInt(),
+                         _inp.next("[brBR]"));
+            } catch (InputMismatchException e) {
+                reportError("syntax error in 'set' command");
+                _inp.nextLine();
+            }
+            break;
+        case "size":
+            try {
+                setSize(_inp.nextInt());
+            } catch (InputMismatchException e) {
+                reportError("syntax error in 'size' command.");
+                _inp.nextLine();
+            }
+            break;
+        case "start":
+            restartGame();
+            break;
+        default:
+            reportError("bad command: '%s'", cmnd);
+            _inp.nextLine();
+        }
+    }
+
+    /** Print a prompt and wait for input. Returns true iff there is another
+     *  token. */
+    private boolean promptForNext() {
+        Side color = _board.whoseMove();
+        Player player = _players[color.ordinal()];
+        if (player instanceof HumanPlayer) {
+            if (_playing) {
+                _prompter.print(color);
+            }
+            _prompter.print("> ");
+            _prompter.flush();
+            return _inp.hasNext();
+        } else {
+            return _inp.hasNext("\n");
+        }
+    }
+
+    /** Send an error message to the user formed from arguments FORMAT
+     *  and ARGS, whose meanings are as for printf. */
+    void reportError(String format, Object... args) {
+        _err.print("Error: ");
+        _err.printf(format, args);
+        _err.println();
+        _err.flush();
+    }
+
+    /** Notify all Oberservers of a change. */
+    private void announce() {
+        setChanged();
+        notifyObservers();
+    }
+
+    /* My methods. */
+    boolean getMove() {
+        try {
+            makeMove(_inp.nextInt(), _inp.nextInt());
+            return true;
+        } catch (InputMismatchException e) {
+            reportError("syntax error in '<move>' command");
+            return false;
+        }
+    }
+
+    /** Writer on which to print prompts for input. */
+    private final PrintWriter _prompter;
+    /** Scanner from current game input.  Initialized to return
+     *  newlines as tokens. */
+    private final Scanner _inp;
+    /** Outlet for responses to the user. */
+    private final PrintWriter _out;
+    /** Outlet for error responses to the user. */
+    private final PrintWriter _err;
+
+    /** The board on which I record all moves. */
+    private final Board _board;
+    /** A readonly view of _board. */
+    private final Board _readonlyBoard;
+
+    /** A pseudo-random number generator used by players as needed. */
+    private final Random _random = new Random();
+
+    /** True iff a game is currently in progress. */
+    private boolean _playing;
+
+    /** When set to a non-negative value, indicates that play should terminate
+     *  at the earliest possible point, returning _exit.  When negative,
+     *  indicates that the session is not over. */
+    private int _exit;
+
+    /** Current players, indexed by color (RED, BLUE). */
+    private final Player[] _players = new Player[Side.values().length];
+
+    /** Used to return a move entered from the console.  Allocated
+     *  here to avoid allocations. */
+    private final int[] _move = new int[2];
+
+}

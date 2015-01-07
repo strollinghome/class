@@ -1,0 +1,32 @@
+Answers to questions from lab.
+
+2. [Explain times for java HashTesting test1].
+When I run 'java HashTesting test1 words 1' since the program uses the
+hash function from the String class it generates a unique hash code for each
+string, which make it unique and the hashtable has fast access. Since each
+hash code is unique the hashtable has no collisions. In contrasts, if I run
+'java HashTesting test1 words 5' then the hash function skips every 5 characters
+and therefore generates a weaker hash code. What I mean for weaker hash code is
+that different strings can have the same hash code since it is plausible for
+more strings to have the same characters at the same index of the strings; this
+scheme creates more collisions in the hashtable (i.e. buckets contain more than
+one object), and it takes longer for the test to check if each string is 
+contained in the hash table.
+
+3. [Explain times for java HashTesting test2 and test3].
+There is a key difference between the two tests that make test3 slower than
+test2. The dfference is that test2 uses xxyy while test3 uses xXyY. The values
+for the X and Y are much larger than the values for x and y. The fact that the
+values are much larger, slows down the calculation of the hash code. Note that
+the times are not significantly different. It takes only a couple milliseconds 
+more to calculate.
+
+
+4. [Why does HashSet fail to work in java HashTesting test4?]
+The HashSet fails because it uses hashing to store the objects. Specifically, we
+changed the .equals() and .compareTo() in order for it to be case insensitive. 
+But we did not change its hashCode() function. Therefore it hashes the values
+in lower case, but when it tries to look up the 'same' words with uppercase the
+resulting hash value is different hence it is not able to localize the word. We
+know this is true because it was able to find BROWN which was hashed as an
+upper-case letter. 

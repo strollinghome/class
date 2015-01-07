@@ -1,0 +1,223 @@
+package db61b;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+/** Tests the Table class.
+ * @author Carlos A. Flores-Arellano.*/
+
+public class TestTable {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Test
+    public void testBasics() {
+        String[] datum0 = new String[]{
+            "SID", "Lastname", "Firstname", "SemEnter", "YearEnter", "Major"};
+
+        Table t0 = new Table(datum0);
+
+        assertEquals(6, t0.columns());
+        assertEquals("SID", t0.getTitle(0));
+        assertEquals("Major", t0.getTitle(5));
+        assertEquals(3, t0.findColumn("SemEnter"));
+        assertEquals(-1, t0.findColumn("NotFound"));
+
+        thrown.expect(DBException.class);
+        t0.getTitle(404);
+        t0.getTitle(-404);
+    }
+
+    /** Tests row methods in table.*/
+    @Test
+    public void testRowMethods() {
+        String[] datum0 = new String[]{
+            "SID", "Lastname", "Firstname", "SemEnter", "YearEnter", "Major"};
+        String[] datum1 = new String[]{
+            "23354460", "Flores", "Carlos", "Spring", "2013", "CS"};
+        String[] datum2 = new String[]{
+            "01010101", "P. Hacker", "Alyss", "Fall", "2050", "EECS"};
+        String[] datum3 = new String[]{
+            "00000000", "This", "is", "too", "long", "to", "be", "in", "table"};
+
+        Table t0 = new Table(datum0);
+        Row row0 = new Row(datum1);
+        Row row1 = new Row(datum1);
+
+        assertTrue(t0.add(row0));
+        assertFalse(t0.add(row1));
+        assertEquals(1, t0.size());
+
+        Table t1 = new Table(datum0);
+        Row row2 = new Row(datum1);
+        Row row3 = new Row(datum2);
+        Row row4 = new Row(datum3);
+
+        assertTrue(t1.add(row2));
+        assertTrue(t1.add(row3));
+        assertEquals(2, t1.size());
+    }
+
+    /** Test the printing of a Row in the Table class*/
+    @Test
+    public void testPrintRow() {
+        String[] datum0 = new String[]{
+            "SID", "Lastname", "Firstname", "SemEnter", "YearEnter", "Major"};
+        String[] datum1 = new String[]{
+            "23354460", "Flores", "Carlos", "Spring", "2013", "CS"};
+        Table t0 = new Table(datum0);
+        Row r0 = new Row(datum1);
+        assertEquals(t0.printRow(r0), "23354460 Flores Carlos Spring 2013 CS ");
+    }
+
+    /** Test select method with one table and one condition.*/
+    @Test
+    public void testSelect() {
+        String[] datum0 = new String[]{
+            "SID", "Lastname", "Firstname", "SemEnter", "YearEnter", "Major"};
+        String[] datum1 = new String[]{
+            "23354460", "Flores", "Carlos", "Spring", "2013", "CS"};
+        String[] datum2 = new String[]{
+            "00000001", "P. Hacker", "Alyss", "Fall", "2050", "EECS"};
+        Table t0 = new Table(datum0);
+        Row r0 = new Row(datum1);
+        Row r1 = new Row(datum2);
+        t0.add(r0);
+        t0.add(r1);
+
+        ArrayList<String> columnNames = new ArrayList<>();
+        columnNames.add("SID");
+        columnNames.add("YearEnter");
+        columnNames.add("Firstname");
+
+        Column col0 = new Column("SID", t0);
+        Condition cond0 = new Condition(col0, ">", "2");
+        Column col1 = new Column("YearEnter", t0);
+        Condition cond1 = new Condition(col1, "<", "2020");
+
+        ArrayList<Condition> conditions = new ArrayList<>();
+        conditions.add(cond0);
+        conditions.add(cond1);
+
+        Table t1 = t0.select(columnNames, conditions);
+        assertEquals(1, t1.size());
+        Iterator<Row> rowIter = t1.iterator();
+        Row r2 = rowIter.next();
+        assertEquals("23354460 2013 Carlos ", t1.printRow(r2));
+    }
+
+    @Test
+    public void testSelectTwoTables() {
+        String[] datum0 = new String[]{
+            "SID", "Lastname", "Firstname", "SemEnter", "YearEnter", "Major"};
+        String[] datum1 = new String[]{
+            "SID", "Language", "Hobbies"};
+        String[] datum2 = new String[]{
+            "23354460", "Flores", "Carlos", "Spring", "2013", "CS"};
+        String[] datum3 = new String[]{
+            "00000000", "P. Hacker", "Alyss", "Fall", "2050", "EECS"};
+        String[] datum4 = new String[]{
+            "23354460", "Java", "Reading"};
+        String[] datum5 = new String[]{
+            "00000001", "Lisp", "Hacking"};
+
+        Table t0 = new Table(datum0);
+        Table t1 = new Table(datum1);
+
+        t0.add(new Row(datum2));
+        t0.add(new Row(datum3));
+        t1.add(new Row(datum4));
+        t1.add(new Row(datum5));
+
+        String col0 = "Hobbies";
+        String col1 = "Language";
+        ArrayList<String> columnNames = new ArrayList<>();
+        columnNames.add(col0);
+        columnNames.add(col1);
+
+        Table t2 = t0.select(t1, columnNames, null);
+        Row expectedResult = new Row(new String[]{"Reading", "Java"});
+        Iterator<Row> rowIter = t2.iterator();
+        Row actualResult = rowIter.next();
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void testSelectTwoTablesConditions() {
+        String[] datum0 = new String[]{
+            "SID", "Lastname", "Firstname", "SemEnter", "YearEnter", "Major"};
+        String[] datum1 = new String[]{
+            "SID", "Language", "Hobbies"};
+        String[] datum2 = new String[]{
+            "23354460", "Flores", "Carlos", "Spring", "2013", "CS"};
+        String[] datum3 = new String[]{
+            "23354461", "P. Hacker", "Alyss", "Fall", "2050", "EECS"};
+        String[] datum4 = new String[]{
+            "23354460", "Java", "Reading"};
+        String[] datum5 = new String[]{
+            "23354461", "Lisp", "Hacking"};
+
+        Table t0 = new Table(datum0);
+        Table t1 = new Table(datum1);
+
+        t0.add(new Row(datum2));
+        t0.add(new Row(datum3));
+        t1.add(new Row(datum4));
+        t1.add(new Row(datum5));
+
+        String col0 = "Hobbies";
+        String col1 = "Language";
+        ArrayList<String> columnNames = new ArrayList<>();
+        columnNames.add(col0);
+        columnNames.add(col1);
+
+        Column column = new Column("SID", new Table[]{t1, t0});
+        Condition cond0 = new Condition(column, "=", "23354460");
+        ArrayList<Condition> conds = new ArrayList<>();
+        conds.add(cond0);
+
+        Table t2 = t0.select(t1, columnNames, conds);
+        Row expectedResult = new Row(new String[]{"Reading", "Java"});
+        Iterator<Row> rowIter = t2.iterator();
+        Row actualResult = rowIter.next();
+        System.out.println(t2.size());
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void testCommonColumns() {
+        ArrayList<String> col0 = new ArrayList<>();
+        col0.add("CCN");
+        col0.add("Num");
+        col0.add("Dept");
+        col0.add("Time");
+        col0.add("Room");
+        col0.add("Sem");
+        col0.add("Year");
+
+        ArrayList<String> col1 = new ArrayList<>();
+        col1.add("SID");
+        col1.add("CCN");
+        col1.add("Grade");
+
+        ArrayList<String> columns = new ArrayList<>();
+        columns.addAll(col0);
+        columns.addAll(col1);
+
+        ArrayList<String> actualColumns = Table.commonColumns(columns);
+        ArrayList<String> expectedColumns = new ArrayList<>();
+        expectedColumns.add("CCN");
+
+        assertEquals(expectedColumns, actualColumns);
+    }
+
+    public static void main(String[] args) {
+        System.exit(ucb.junit.textui.runClasses(TestTable.class));
+    }
+}

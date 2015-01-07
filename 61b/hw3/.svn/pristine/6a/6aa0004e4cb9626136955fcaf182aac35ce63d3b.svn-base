@@ -1,0 +1,33 @@
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+
+/** String translation.
+ * @author Carlos Flores. */
+public class Translate {
+    /** Return the String S, but with all characters that occur in FROM
+     *  changed to the corresponding characters in TO. FROM and TO must
+     *  have the same length. */
+    static String translate(String S, String from, String to) {
+        char[] buffer = new char[S.length()];
+        String tS = "";
+        Reader in = new StringReader(S);
+        TrReader translation = new TrReader(in, from, to);
+        while (true) {
+            try {
+                int c = translation.read();
+                if (c == -1) {
+                    break;
+                }
+                tS += (char) c;
+            } catch (IOException e) { return null; }
+        }
+        return tS;
+    }
+
+    public static void main(String[] args) {
+        String s = args[0];
+        s = translate(s, "ac", "AC");
+        System.out.println(s);
+    }
+}

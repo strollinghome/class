@@ -1,0 +1,24 @@
+/** Functions to increment and sum the elements of a WeirdList. */
+class WeirdListClient {
+    
+    /** Number to be adde. */
+    static private int _toAdd;
+    /** Part 2b. Returns the result of adding N to each element of L. */
+    static WeirdList add(WeirdList L, int n) {
+        _toAdd = n;
+        return L.map(apply(x));
+    }
+
+    private int apply(int x) {
+        return _toAdd + x;
+    }
+
+
+    // As with WeirdList, you'll need to add an additional class or
+    // perhaps more for WeirdListClient to work. And you may put
+    // those classes either inside WeirdListClient as private static
+    // classes, or in their own separate files.
+
+    // You are still forbidden from using any of the following:
+    //       if, switch, while, for, do, try, or the ?: operator.
+}

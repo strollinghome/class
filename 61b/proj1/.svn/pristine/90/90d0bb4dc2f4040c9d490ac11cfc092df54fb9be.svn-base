@@ -1,0 +1,19 @@
+package db61b;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
+
+/** Tests the Sample class.
+ * @author Carlos A. Flores-Arellano.*/
+
+public class SampleTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    public static void main(String[] args) {
+        System.exit(ucb.junit.textui.runClasses(SampleTest.class));
+    }
+}
