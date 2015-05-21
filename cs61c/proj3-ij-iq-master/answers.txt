@@ -1,0 +1,36 @@
+QUESTION 1:
+
+LAYER 0 (conv)     : 4060.402 ms / <p> %
+LAYER 1 (relu)     :   39.106 ms / <p> %
+LAYER 2 (pool)     :   84.328 ms / <p> %
+LAYER 3 (conv)     : 4108.805 ms / <p> %
+LAYER 4 (relu)     :   28.828 ms / <p> %
+LAYER 5 (pool)     :   25.068 ms / <p> %
+LAYER 6 (conv)     : 1162.718 ms / <p> %
+LAYER 7 (relu)     :    1.060 ms / <p> %
+LAYER 8 (pool)     :    6.463 ms / <p> %
+LAYER 9 (fc)       :    6.630 ms / <p> %
+LAYER 10 (softmax) :    0.901 ms / <p> %
+
+QUESTION 2:
+
+conv: 97.98 %
+relu:  0.72 %
+pool:  1.22 %
+fc: 0.07 %
+softmax: 0.009  %
+
+largest fraction: conv
+smallest fraction: softmax
+
+QUESTION 3:
+
+conv: 3.77 x
+relu: 1.0054 x
+pool: 1.0092 x
+fc: 1.00052 x
+softmax: 1.0000675 x
+
+Which layer should we optimize?
+
+conv
